@@ -7,12 +7,12 @@
 
   <ng-container *ngIf='df_columns.length > 0'>
     <mat-form-field>
-      <mat-select [(ngModel)]="x_col" placeholder='X variable' (selectionChange)='XYchange()'>
+      <mat-select [disabled]='graph' [(ngModel)]="x_col" placeholder='X variable' (selectionChange)='XYchange()'>
         <mat-option *ngFor='let col of df_columns' [value]="col">{{col}}</mat-option>
       </mat-select>
     </mat-form-field>
     <mat-form-field>
-      <mat-select [(ngModel)]="y_col" placeholder='Y variable' (selectionChange)='XYchange()'>
+      <mat-select [disabled]='graph' [(ngModel)]="y_col" placeholder='Y variable' (selectionChange)='XYchange()'>
         <mat-option *ngFor='let col of df_columns' [value]="col">{{col}}</mat-option>
       </mat-select>
     </mat-form-field>
@@ -23,7 +23,10 @@
     </ng-container>
     <p>
       <mat-form-field>
-        <input class='formulaInput' matInput [disabled]='graph && graph.y' placeholder="Input functional form here" [(ngModel)]='mathFormulaInput' (keydown.enter)='mathInputted()'>
+        <input class='formulaInput' matInput [disabled]='graph' placeholder="Input functional form here" [(ngModel)]='mathFormulaInput'
+        (keydown.enter)='mathInputted()'
+        (focusout)='$event.target.value && !graph && mathInputted()'
+        >
       </mat-form-field>
     </p>
     <ng-container *ngIf='graph'>
