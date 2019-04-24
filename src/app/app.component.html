@@ -25,7 +25,7 @@
       <mat-form-field>
         <input class='formulaInput' matInput [disabled]='graph' placeholder="Input functional form here" [(ngModel)]='mathFormulaInput'
         (keydown.enter)='mathInputted()'
-        (focusout)='$event.target.value && !graph && mathInputted()'
+        (focusout)='mathFormulaInput && !graph && mathInputted()'
         >
       </mat-form-field>
     </p>
