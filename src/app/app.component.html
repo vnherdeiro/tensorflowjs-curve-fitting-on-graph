@@ -1,6 +1,5 @@
 
 
-<!-- <mat-card> -->
   <h2> Curve fitting toolbox </h2>
   <csv-upload-button *ngIf='df_columns.length === 0' (onFileUpload)='dataUpload($event)'> </csv-upload-button>
 
@@ -17,57 +16,43 @@
         <mat-option *ngFor='let col of df_columns' [value]="col">{{col}}</mat-option>
       </mat-select>
     </mat-form-field>
-    <!-- </mat-card> -->
-
-    <!-- <mat-card> -->
-      <!-- {{y}} -->
-      <p>
-        <mat-form-field>
-          <input class='formulaInput' matInput [disabled]='graph && graph.y' placeholder="Input functional form here" [(ngModel)]='mathFormulaInput' (keydown.enter)='mathInputted()'>
-        </mat-form-field>
-      </p>
-
-    </ng-container>
-    <ng-container *ngIf='graph?.variables.length'>
-      <h5> Function parameters </h5>
-      <ul>
-        <li *ngFor='let variable of graph?.variables | variableFilter'> {{variable}} </li>
-      </ul>
-    </ng-container>
-    <!-- </mat-card> -->
-
-
-    <p>
-      <button mat-stroked-button *ngIf='graph' [disabled]='isFitting' (click)='fit()'>{{ isFitting ? 'Fitting...' : "FIT"}}</button>
-    </p>
-
 
     <ng-container *ngIf='chart?.series.length > 0'>
       <div echarts [options]="chart">
       </div> 
     </ng-container>
-
+    <p>
+      <mat-form-field>
+        <input class='formulaInput' matInput [disabled]='graph && graph.y' placeholder="Input functional form here" [(ngModel)]='mathFormulaInput' (keydown.enter)='mathInputted()'>
+      </mat-form-field>
+    </p>
     <ng-container *ngIf='graph'>
       <mat-list role="list">
         <mat-list-item> <h4> Variables </h4> </mat-list-item>
         <mat-list-item *ngFor="let item of fittedValues | keyvalue">           
-         <h4 style='font-size: larger;'>{{item.key}}</h4>
+         <h4 style='font-size: larger;'>
+          {{item.key}}
+          </h4>
          <!-- <div class='variableInputField'> -->
-         <!-- <mat-form-field> -->
-          <input class='variableInput' type='number' [(ngModel)]='item.value' (change)='changeVarValue(item.key, $event.target.value)'>
-        <!-- </mat-form-field> -->
-      <!-- </div> -->
-      </mat-list-item>
-    </mat-list>
-  </ng-container>
+           <!-- <mat-form-field> -->
+            <input class='variableInput' type='number' [(ngModel)]='item.value' (change)='changeVarValue(item.key, $event.target.value)'>
+            <!-- </mat-form-field> -->
+            <!-- </div> -->
+          </mat-list-item>
+        </mat-list>
+      </ng-container>
 
-    <ng-container *ngIf='hasFitted'>
-      <mat-list role="list">
-        <mat-list-item> <h4> R-square </h4></mat-list-item>
-      <mat-list-item> 
-        {{ Rsquare | number:'1.3-3'}}
-      </mat-list-item>
-    </mat-list>
-    </ng-container>
+      <p>
+        <button class='fitButton' mat-stroked-button *ngIf='graph' [disabled]='!(this.train_x && this.train_y)' (click)='trainMode()'> {{trainButtonMsg | async}}</button>
+        <!-- <button class='fitButton' mat-stroked-button *ngIf='graph' [disabled]='isFitting && this.train_x && this.train_y' (click)='fit()'>{{ isFitting ? 'Fitting...' : "FIT"}}</button> -->
+      </p>
+      <ng-container *ngIf='hasFitted'>
+        <mat-list role="list">
+          <mat-list-item> <h4> R-square </h4></mat-list-item>
+          <mat-list-item style='font-size: larger;'> 
+            {{ Rsquare | number:'1.3-3'}}
+          </mat-list-item>
+        </mat-list>
+      </ng-container>
 
-  <router-outlet></router-outlet>
+      <router-outlet></router-outlet>

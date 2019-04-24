@@ -5,8 +5,12 @@ import * as tf from '@tensorflow/tfjs';
 import * as _ from 'lodash';
 import {DataFrame} from "dataframe-js";
 
+import {BehaviorSubject, interval, Observable} from 'rxjs';
+import { map, pairwise, filter, tap, mapTo } from 'rxjs/operators';
+
 const ReservedParams = ['a','b','c','d','e',"alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta", "theta", "iota", "kappa", "lambda"];
 
+// calculates the sum of an array
 const arrSum = function(arr){
   return arr.reduce(function(a,b){
     return (+a) + (+b)
@@ -17,77 +21,27 @@ class tfGraph {
 
   variables:string[] = [];
   formula_head;
-  y;
+  y_input;
   x_input;
   model;
   lossAndOptimizer;
   varDic = {};
+  optimizer = undefined;
+  trainingState = undefined;
+  _running = false;
+  timer = undefined;
 
 
   constructor(private mathFormulaInput:string){
-    // console.log( math.parse( mathFormulaInput));
     this.formula_head = math.parse( mathFormulaInput);
-    // this.collect_variables();
-    // console.log(this.varDic);
     this.allocate_variables();
-    // console.log(this.varDic);
-    // this.y = this._rec_tree2tf(this.formula_head);
-    // console.log( 'graph', this.y);
-    // this.build_model();
   }
-
-  // _rec_tree2tf ( node, ) {
-  //   let args = node.args;
-  //   for( let i = 0; args && i < args.length; i++){
-  //     args[i] = this._rec_tree2tf( args[i]);
-  //   }
-
-  //   switch (node.type) {
-  //     case 'OperatorNode':
-  //     if ( node.isBinary()){
-  //       // console.log(node.fn.slice(0,3), args[0], args[1]);
-  //       return tf[node.fn.slice(0,3)]( args[0], args[1]); //taking the prefix of the operator to match tf methods naming
-  //     }
-  //     else{
-  //       return tf.mul(-1, args[0]); //assuming unary operator => unary minus
-  //     }
-  //     case 'ConstantNode':
-  //     // console.log(node.type, node.value);
-  //     return tf.variable( tf.scalar(node.value), false);
-  //     case 'SymbolNode':
-  //     // console.log( node);
-  //     if (node.name.toLowerCase() === 'exp'){ //exp operator call
-  //       return tf.exp( args[0]);
-  //     }
-  //     else if (node.name.toLowerCase() === 'log'){ //log operator
-  //       return tf.log( args[0]);
-  //     }
-  //     else if (node.name.toLowerCase() === 'x'){ //x input variable -- maybe store it separately to build model(input, output)
-  //       // this.x_input = tf.input( {shape:[1,], name:'x'});
-  //       // this.x_input = tf.variable( tf.scalar(0), false, node.name ); //giving initial value in the future
-  //       // console.log( 'defined x', this.x_input)
-  //       return this.x_input;
-  //     }
-  //       return tf.variable( tf.scalar(0), true, node.name ); //giving initial value in the future
-  //     case 'FunctionNode':
-  //     // console.log('function node', node.type, node.name, node['fn']['name'], tf[node['fn']['name']] !== undefined)
-  //       return tf[node.name]( args[0]); //assuming unary operation
-  //     case 'ParenthesisNode':
-  //       return this._rec_tree2tf(node.content);
-  //     default:
-  //     console.log('Other node', node)
-  //   }
-  // };
-
 
   _rec_pred( node, ) {
 
     switch (node.type) {
       case 'OperatorNode':
       if ( node.isBinary()){
-        // console.log(node.fn.slice(0,3), args[0], args[1]);
-        // console.log(node.fn, this._rec_pred(node.args[0]), this._rec_pred(node.args[1])); //taking the prefix of the operator to match tf methods naming
-        // console.log( node)
         return tf[node.fn.slice(0,3)]( this._rec_pred(node.args[0]), this._rec_pred(node.args[1])); //taking the prefix of the operator to match tf methods naming
       }
       else{
@@ -125,23 +79,24 @@ class tfGraph {
 
 
 
-  pred( x){
-    this.x_input = tf.tensor1d( x, 'float32');
-    // console.log( this.x_input)
+
+  pred(){
     return this._rec_pred(this.formula_head)
   }
 
-  loss(x,y){
-    const pred = this.pred(x);
-    return pred.sub( tf.tensor1d(y, 'float32')).square().mean();
+  loss(){
+    const pred = this.pred();
+    return pred.sub( this.y_input).square().mean();
   }
 
   train(x,y){
     let optimizer = tf.train.adam(1e-2);
+    this.x_input = tf.tensor1d( x, 'float32');
+    this.y_input = tf.tensor1d( y, 'float32');
       // for( let t =0; t < 2e1; t++){
       for( let t =0; t < 2e3; t++){
       optimizer.minimize(() => {
-        return this.loss(x,y);
+        return this.loss();
       });
     }
   }
@@ -153,29 +108,6 @@ class tfGraph {
     }
   }
 
-
-  // build_model(){
-  //   // console.log('building model', this.x_input, this.y)
-  //   this.model = tf.model( {inputs:this.x_input, outputs:this.y});
-  //   console.log( this.model);
-  //   console.log( this.model.summary());
-  //   this.lossAndOptimizer = {
-  //     loss: 'meanSquaredError',
-  //     optimizer: 'adam',
-  //   };
-  // }
-
-
-  // collect_variables(){
-  //   let variables = [];
-  //   this.formula_head.traverse(function (node, path, parent) {
-  //     if (node.type === 'SymbolNode') {
-  //       variables.push( node.name);
-  //     }
-  //   });
-  //   this.variables = variables.sort();
-  //   // console.log( this.variables);
-  // }
 
     allocate_variables(){
       // console.log('inside', this.varDic);
@@ -191,12 +123,40 @@ class tfGraph {
     // console.log( this.variables);
   }
 
-  // async train( x, y){
-  //   let tensor_x = tf.tensor1d( x, 'float32');
-  //   let tensor_y = tf.tensor1d( y, 'float32');
-  //   this.model.compile( this.lossAndOptimizer);
-  //   await this.model.fit( tensor_x, tensor_y, {epochs:3});
-  // }
+    trainStart(x, y, trainingState){
+  // trainStart(duration=3000, batch=10000, isTraining){
+    this.optimizer = tf.train.adam(1e-2);
+    this.x_input = tf.tensor1d( x, 'float32');
+    this.y_input = tf.tensor1d( y, 'float32');
+
+    this.trainingState = trainingState;
+    this.trainingState.next( 2);
+    this._running = true;
+    this.timer = setTimeout( () => this.trainStep());
+    // setTimeout( () => {this.trainStop(); isTraining.next(false)}, duration);
+    // let resolve = () => {this.trainStop();};
+    // await new Promise(resolve => setTimeout(resolve, duration));
+  }
+
+    trainStep(){
+      for( let t =0; t < 50; t++){
+     this.optimizer.minimize(() => {
+        return this.loss();
+      });
+    }
+      if( this._running){
+    this.timer = setTimeout( () => this.trainStep());
+  }
+  else{
+    this.trainingState.next(0);
+  }
+  }
+  
+  trainStop(){
+    this._running = false;
+    clearTimeout( this.timer);
+    this.trainingState.next(0);
+  }
 
 
 }
@@ -281,101 +241,34 @@ export class AppComponent {
   fittedValues = {};
   Rsquare = 0;
   isFitting = false;
+  trainingState = new BehaviorSubject<number>(0);
+  policy_update_sub = undefined;
+  trainButtonMsg:Observable<string>;
+  endOfTrainingObs;
 
   constructor(){
     this.chart = _.cloneDeep( OPTION_TEMPLATE);
-    // const parser = math.parser();
-    // let f = parser.eval('f(x, y) = x^y');
-    // console.log(f);
-    // console.log( f(2,3));
-    // this.tfDummyExample();
 
-    // this.tfDummyExample_withModel();
+    this.trainButtonMsg = this.trainingState.asObservable().pipe( map( x => {
+      if (x === 0){
+        return 'Fit';
+      }
+      if (x === 1){
+        return 'Stopping...';
+      }
+      return 'Stop';
+    })
+    );
+    // console.log('setting them up ');
+    this.endOfTrainingObs = this.trainingState.pipe( pairwise(), filter( values => values[0] !== 0 && values[1] === 0));
+    //update policy vis when training is finished
+    this.endOfTrainingObs.subscribe( x => this.updateFitLine());
+
   }
 
 
-  // tfDummyExample(){
-  //   // generated dummy data
-  //   let x_train = tf.tensor1d( [1,2,3,4,5,6,7], "float32");
-  //   let y_train = tf.tensor1d( [1,2,3,4,5,6,7], "float32");
-  //   let slope = tf.variable( tf.scalar(0), true, 'slope');
-  //   let intercept = tf.variable( tf.scalar(0), true, 'intercept');
-  //   const optimizer = tf.train.adam();
-
-
-  //   function loss(prediction) {
-  //     return prediction.sub(y_train).square().mean();
-  //   }
-
-  //   console.log('training now');
-  //   for( let t =0; t < 5e3; t++){
-  //     optimizer.minimize(() => {
-  //       const pred = slope.mul(x_train).add( intercept);
-  //       return loss(pred);
-  //     });
-  //     // await tf.nextFrame();
-  //   }
-
-  //   console.log('training done');
-  //   slope.print();
-  //   intercept.print();
-  //   const pred = loss(slope.mul(x_train).add( intercept));
-  //   pred.print();
-  // }
-
-
-
-  // tfDummyExample_withModel(){
-  //   // generated dummy data
-  //   let x_train = tf.tensor1d( [1,2,3,4,5,6,7], "float32");
-  //   let y_train = tf.tensor1d( [1,2,3,4,5,6,7], "float32");
-  //   let slope = tf.variable( tf.scalar(0), true, 'slope');
-  //   let intercept = tf.variable( tf.scalar(0), true, 'intercept');
-  //   // let x = tf.input( {shape:[1]});
-  //   let x = tf.variable( tf.scalar(0), false, 'input');
-  //   let y = tf.add(tf.mul(slope, x), intercept);
-  //   const optimizer = tf.train.adam();
-
-
-  //   // function loss(prediction) {
-  //   //   return prediction.sub(y_train).square().mean();
-  //   // }
-
-  //   // console.log('training now');
-  //   // for( let t =0; t < 5etrained++){
-  //   //   optimizer.minimize(() => {
-  //   //     const pred = slope.mul(x_train).add( intercept);
-  //   //     return loss(pred);
-  //   //   });
-  //   //   // await tf.nextFrame();
-  //   // }
-
-  //   // console.log('training done');
-  //   // slope.print();
-  //   // intercept.print();
-  //   // const pred = loss(slope.mul(x_train).add( intercept));
-  //   // pred.print();
-
-
-  //   let model = tf.model( {inputs: x, outputs: y});
-  //   console.log( model);
-  //   console.log( model.summary());
-  //   let lossAndOptimizer = {
-  //     loss: 'meanSquaredError',
-  //     optimizer: 'adam',
-  //   };
-
-  //   model.compile( lossAndOptimizer);
-  //   model.fit( x_train, y_train, {epochs:3});
-  // }
 
   mathInputted(){
-    // console.log( 'input expression:', this.mathFormulaInput);
-    // let nd = nerdamer( this.mathFormulaInput);
-    // let f = nd.buildFunction( undefined);
-    // console.log( nd.variables());
-    // console.log( f);
-    // this.graph = undefined; //could force some garbage collection of the graph
     this.graph = new tfGraph( this.mathFormulaInput);
     for( let name of Object.keys( this.graph.varDic)){
       this.fittedValues[ name] = this.graph.varDic[name].dataSync();
@@ -402,6 +295,8 @@ export class AppComponent {
         serie.data.push( [this.train_x[index], this.train_y[index]]);
       }  
       serie['name'] = 'data';
+      serie['type'] = 'scatter';
+      serie['symbolSize'] =  5;
       this.chart.series = [serie,]
       this.chart.legend.data = ['data',]
       this.chart = _.cloneDeep(this.chart);
@@ -410,16 +305,8 @@ export class AppComponent {
     }
   }
 
-  fit(){
-    if( this.train_x && this.train_y){
-      // console.log('training...')
-      // this.graph.printValues();
-      this.isFitting = true;
-      this.graph.train( this.train_x, this.train_y);
-      // console.log('trained')
-      // this.graph.printValues();
-
-  // adding fit line
+  updateFitLine(){
+      // adding fit line
       let x_points = tf.linspace( Math.min(...this.train_x), Math.max(...this.train_x), 1000).dataSync();
       let y_points = this.graph.pred( x_points).dataSync();
       // let temp_x = x_points;
@@ -436,17 +323,19 @@ export class AppComponent {
       for( let name of Object.keys( this.graph.varDic)){
         this.fittedValues[ name] = this.graph.varDic[name].dataSync();
       }
-
-
       this.calculateRsquare();
-      this.isFitting = false;
-      this.hasFitted = true;
+  }
 
-      // this.graph.print
-    }
-    else{
-      console.log('no training data');
-    }
+  fit(){
+    // console.log('training...')
+    // this.graph.printValues();
+    this.isFitting = true;
+    this.graph.train( this.train_x, this.train_y);
+    // console.log('trained')
+    // this.graph.printValues();
+    this.updateFitLine();
+    this.isFitting = false;
+    this.hasFitted = true;
   }
 
   changeVarValue(key, newValue){
@@ -462,25 +351,21 @@ export class AppComponent {
     let SSreg = arrSum(y_fit.map( x => Math.pow(x - train_y_mean,2)));
     // console.log( y_fit.length, this.train_y.length, train_y_mean, SStot, SSreg);
     this.Rsquare = SSreg/SStot;
+    this.hasFitted = true;
   }
 
-  //   let observations = this.train_y.map( x => +x);
-  //   let predictions = y_fit;
-  //   const sum = observations.reduce((a, observation) => a + observation, 0);
-  //   const mean = sum / observations.length;
 
-  //   const ssyy = observations.reduce((a, observation) => {
-  //     const difference = observation - mean;
-  //     return a + (difference * difference);
-  //   }, 0);
+      trainMode(){
+      if ( this.trainingState.getValue() === 0){
+        this.policy_update_sub = interval(1500).subscribe( x => this.updateFitLine());
+        this.graph.trainStart(this.train_x, this.train_y, this.trainingState);
+      }
+      else{
+        this.trainingState.next(1);
+        this.policy_update_sub.unsubscribe();
+        this.graph.trainStop();
+      }
+    }
 
-  //   const sse = observations.reduce((accum, observation, index) => {
-  //     const prediction = predictions[index];
-  //     const residual = observation - prediction;
-  //     return accum + (residual * residual);
-  //   }, 0);
-  //     console.log( sum, mean, ssyy, sse);
 
-  //   this.Rsquare =  1 - (sse / ssyy);
-  // }
 }

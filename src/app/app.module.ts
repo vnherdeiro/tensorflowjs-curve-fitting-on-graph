@@ -18,8 +18,6 @@ import {
   MatButtonModule,
 } from '@angular/material';
 
-import { VariableFilterPipe } from './variable-filter.pipe';
-
 import { UploadButtonComponent} from './upload-button/upload-button.component';
 
 import { NgxEchartsModule } from 'ngx-echarts';
@@ -29,7 +27,6 @@ import { NgxEchartsModule } from 'ngx-echarts';
 @NgModule({
   declarations: [
     AppComponent,
-    VariableFilterPipe,
     UploadButtonComponent,
   ],
   imports: [
