@@ -11,16 +11,25 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "~7.0.0",
+    "@angular/animations": "^7.0.4",
+    "@angular/cdk": "^7.3.1",
     "@angular/common": "~7.0.0",
     "@angular/compiler": "~7.0.0",
     "@angular/core": "~7.0.0",
     "@angular/forms": "~7.0.0",
     "@angular/http": "~7.0.0",
+    "@angular/material": "^7.3.1",
     "@angular/platform-browser": "~7.0.0",
     "@angular/platform-browser-dynamic": "~7.0.0",
     "@angular/router": "~7.0.0",
+    "@tensorflow/tfjs": "^1.1.0",
+    "@types/mathjs": "^4.4.5",
     "core-js": "^2.5.4",
+    "dataframe-js": "^1.3.2",
+    "echarts": "^4.2.0-rc.2",
+    "mathjs": "^5.4.2",
+    "nerdamer": "^0.8.4",
+    "ngx-echarts": "^4.1.0",
     "rxjs": "~6.3.3",
     "zone.js": "~0.8.26"
   },
@@ -29,9 +38,10 @@
     "@angular/cli": "~7.0.6",
     "@angular/compiler-cli": "~7.0.0",
     "@angular/language-service": "~7.0.0",
-    "@types/node": "~8.9.4",
+    "@types/echarts": "^4.1.3",
     "@types/jasmine": "~2.8.8",
     "@types/jasminewd2": "~2.0.3",
+    "@types/node": "~8.9.4",
     "codelyzer": "~4.5.0",
     "jasmine-core": "~2.99.1",
     "jasmine-spec-reporter": "~4.2.1",
@@ -44,5 +54,11 @@
     "ts-node": "~7.0.0",
     "tslint": "~5.11.0",
     "typescript": "~3.1.6"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false,
+    "crypto":false
   }
 }

@@ -1,0 +1,30 @@
+ .formulaInput{
+    min-width: 40vw!important;
+}
+
+/* .variableInput{
+	 text-align: end;	
+     vertical-align: -webkit-baseline-middle;
+ }*/
+
+
+/* ::ng-deep .mat-form-field-underline {
+    display: none;
+}*/
+
+/*.variableInputField.mat-form-field-underline {
+    display: none;
+}*/
+
+ .variableInput{
+ 	font-size: larger;
+ 	/*float: right!important;*/
+ 	border: 1px solid black;
+ 	text-align: end;
+ 	margin-left: 30px;
+ }
+
+  ::ng-deep .mat-stroked-button {
+ 	font-size: larger;
+  	border: 2px solid black;
+ }

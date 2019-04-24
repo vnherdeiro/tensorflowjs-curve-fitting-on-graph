@@ -1,0 +1,7 @@
+<div>
+	<h4> Import CSV datafile </h4>
+    <button class='btn' mat-stroked-button (click)='fileinput.click()'>
+        <mat-icon>attach_file</mat-icon>
+    </button>
+    <input #fileinput hidden accept=".csv" type='file' (change)='onFileInput($event)'>
+</div>

@@ -1,21 +1,73 @@
-<!--The content below is only a placeholder and can be replaced.-->
-<div style="text-align:center">
-  <h1>
-    Welcome to {{ title }}!
-  </h1>
-  <img width="300" alt="Angular Logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==">
-</div>
-<h2>Here are some links to help you start: </h2>
-<ul>
-  <li>
-    <h2><a target="_blank" rel="noopener" href="https://angular.io/tutorial">Tour of Heroes</a></h2>
-  </li>
-  <li>
-    <h2><a target="_blank" rel="noopener" href="https://github.com/angular/angular-cli/wiki">CLI Documentation</a></h2>
-  </li>
-  <li>
-    <h2><a target="_blank" rel="noopener" href="https://blog.angular.io/">Angular blog</a></h2>
-  </li>
-</ul>
 
-<router-outlet></router-outlet>
+
+<!-- <mat-card> -->
+  <h2> Curve fitting toolbox </h2>
+  <csv-upload-button *ngIf='df_columns.length === 0' (onFileUpload)='dataUpload($event)'> </csv-upload-button>
+
+
+
+  <ng-container *ngIf='df_columns.length > 0'>
+    <mat-form-field>
+      <mat-select [(ngModel)]="x_col" placeholder='X variable' (selectionChange)='XYchange()'>
+        <mat-option *ngFor='let col of df_columns' [value]="col">{{col}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-select [(ngModel)]="y_col" placeholder='Y variable' (selectionChange)='XYchange()'>
+        <mat-option *ngFor='let col of df_columns' [value]="col">{{col}}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <!-- </mat-card> -->
+
+    <!-- <mat-card> -->
+      <!-- {{y}} -->
+      <p>
+        <mat-form-field>
+          <input class='formulaInput' matInput [disabled]='graph && graph.y' placeholder="Input functional form here" [(ngModel)]='mathFormulaInput' (keydown.enter)='mathInputted()'>
+        </mat-form-field>
+      </p>
+
+    </ng-container>
+    <ng-container *ngIf='graph?.variables.length'>
+      <h5> Function parameters </h5>
+      <ul>
+        <li *ngFor='let variable of graph?.variables | variableFilter'> {{variable}} </li>
+      </ul>
+    </ng-container>
+    <!-- </mat-card> -->
+
+
+    <p>
+      <button mat-stroked-button *ngIf='graph' [disabled]='isFitting' (click)='fit()'>{{ isFitting ? 'Fitting...' : "FIT"}}</button>
+    </p>
+
+
+    <ng-container *ngIf='chart?.series.length > 0'>
+      <div echarts [options]="chart">
+      </div> 
+    </ng-container>
+
+    <ng-container *ngIf='graph'>
+      <mat-list role="list">
+        <mat-list-item> <h4> Variables </h4> </mat-list-item>
+        <mat-list-item *ngFor="let item of fittedValues | keyvalue">           
+         <h4 style='font-size: larger;'>{{item.key}}</h4>
+         <!-- <div class='variableInputField'> -->
+         <!-- <mat-form-field> -->
+          <input class='variableInput' type='number' [(ngModel)]='item.value' (change)='changeVarValue(item.key, $event.target.value)'>
+        <!-- </mat-form-field> -->
+      <!-- </div> -->
+      </mat-list-item>
+    </mat-list>
+  </ng-container>
+
+    <ng-container *ngIf='hasFitted'>
+      <mat-list role="list">
+        <mat-list-item> <h4> R-square </h4></mat-list-item>
+      <mat-list-item> 
+        {{ Rsquare | number:'1.3-3'}}
+      </mat-list-item>
+    </mat-list>
+    </ng-container>
+
+  <router-outlet></router-outlet>

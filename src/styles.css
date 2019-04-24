@@ -1,1 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
+
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
+
+* {
+	font-family: 'Source Sans Pro', sans-serif;
+}
+
+ input{
+	text-align: right;
+}
+
+ h1{
+ 	font-size: larger!important;
+    margin-left: 1rem;
+ }
+
+/* input{
+ 	font-size: 93%!important;
+ 	float: right!important;
+ 	border: 2px solid black;
+ }*/
+
+/* input:disabled{
+ 	border: 1px dashed lightgrey!important;
+ }*/
+
+
+ ::ng-deep .mat-stroked-button {
+ 	font-size: larger;
+  	border: 2px solid black;
+ }
