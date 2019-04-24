@@ -26,6 +26,9 @@
  	border: 1px dashed lightgrey!important;
  }*/
 
+/* ::ng-deep .mat-select h1 h2 h3 h4 h5 input{
+	margin-left: 5vw;
+}*/
 
  ::ng-deep .mat-stroked-button {
  	font-size: larger;
