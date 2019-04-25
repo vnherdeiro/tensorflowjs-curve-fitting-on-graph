@@ -2,9 +2,9 @@
 
 
 
-![](https://mathjs.org/css/img/mathjs_330x100.png | width=200)
+<img src="https://upload.wikimedia.org/wikipedia/commons/1/11/TensorFlowLogo.svg" width="200">
+<img src="https://mathjs.org/css/img/mathjs_330x100.png" width="200">
 
-![](https://https://upload.wikimedia.org/wikipedia/commons/1/11/TensorFlowLogo.svg | width=200)
 
 
 Similar to the fitting toolbox shipped in MATLAB (at least 10 years ago, last time I used it), this single page app works by inviting the user to upload a `csv` datafile, pick two of its columns, one for `x` one for `y`, inputting a functional form `y=f(x)` with some free parameters.
