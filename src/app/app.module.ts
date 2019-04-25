@@ -22,8 +22,6 @@ import { UploadButtonComponent} from './upload-button/upload-button.component';
 
 import { NgxEchartsModule } from 'ngx-echarts';
 
-
-
 @NgModule({
   declarations: [
     AppComponent,
