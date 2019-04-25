@@ -41,31 +41,31 @@ class tfGraph {
 
     switch (node.type) {
       case 'OperatorNode':
-      if ( node.isBinary()){
-        return tf[node.fn.slice(0,3)]( this._rec_pred(node.args[0]), this._rec_pred(node.args[1])); //taking the prefix of the operator to match tf methods naming
-      }
-      else{
-        return tf.mul(-1, this._rec_pred(node.args[0])); //assuming unary operator => unary minus
-      }
+        if ( node.isBinary()){
+          return tf[node.fn.slice(0,3)]( this._rec_pred(node.args[0]), this._rec_pred(node.args[1])); //taking the prefix of the operator to match tf methods naming
+        }
+        else{
+          return tf.mul(-1, this._rec_pred(node.args[0])); //assuming unary operator => unary minus
+        }
       case 'ConstantNode':
-      return tf.variable( tf.scalar(node.value), false);
+        return tf.variable( tf.scalar(node.value), false);
       case 'SymbolNode':
-      if (node.name.toLowerCase() === 'exp'){ //exp operator call
-        return tf.exp( this._rec_pred(node.args[0]));
-      }
-      else if (node.name.toLowerCase() === 'log'){ //log operator
-        return tf.log( this._rec_pred(node.args[0]));
-      }
-      else if (node.name.toLowerCase() === 'x'){ //x input variable -- maybe store it separately to build model(input, output)
-        return this.x_input;
-      }
-      return this.varDic[ node.name];
+        if (node.name.toLowerCase() === 'exp'){ //exp operator call
+          return tf.exp( this._rec_pred(node.args[0]));
+        }
+        else if (node.name.toLowerCase() === 'log'){ //log operator
+          return tf.log( this._rec_pred(node.args[0]));
+        }
+        else if (node.name.toLowerCase() === 'x'){ //x input variable -- maybe store it separately to build model(input, output)
+          return this.x_input;
+        }
+        return this.varDic[ node.name];
       case 'FunctionNode':
-      return tf[node.name]( this._rec_pred(node.args[0])); //assuming unary operation
+        return tf[node.name]( this._rec_pred(node.args[0])); //assuming unary operation
       case 'ParenthesisNode':
-      return this._rec_pred(node.content);
+        return this._rec_pred(node.content);
       default:
-      console.log('Other node', node)
+        throw new Error('Unknown node' + node);
     }
   }
 
@@ -99,7 +99,7 @@ class tfGraph {
   }
 
   trainStart(x, y, trainingState){
-    this.optimizer = tf.train.adam(1e-2);
+    this.optimizer = tf.train.adam();
     this.x_input = tf.tensor1d( x, 'float32');
     this.y_input = tf.tensor1d( y, 'float32');
 
@@ -260,7 +260,9 @@ export class AppComponent {
       serie['name'] = 'data';
       serie['type'] = 'scatter';
       serie['symbolSize'] =  5;
-      this.chart.series = [serie,]
+      this.chart.series = [serie,];
+      this.chart.xAxis.min = Math.min( ...this.train_x);
+      this.chart.xAxis.max = Math.max( ...this.train_x);
       this.chart.legend.data = ['data',]
       this.chart = _.cloneDeep(this.chart);
     }
